@@ -36,6 +36,8 @@ class Detect(Function):
         output = torch.zeros(num, self.num_classes, self.top_k, 5)
         conf_preds = conf_data.view(num, num_priors,
                                     self.num_classes).transpose(2, 1)
+#ok, in the next days, i just do something here 
+#to do
 
         # Decode predictions into bboxes.
         for i in range(num):
