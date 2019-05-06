@@ -1,7 +1,7 @@
 import torch
 from torch.autograd import Function
-from ..box_utils import decode
-from data import voc as cfg
+#from ..box_utils import decode
+#from data import voc as cfg
 
 class Paper_box():
     def data(self, index, x, y, xmin, ymin, xmax, ymax, confidences):
@@ -14,8 +14,6 @@ class Paper_box():
         self.ymax = ymax
         self.confidences = confidences
 
-def quicksort():
-    i = 1
    
 def box_iou(x1min, y1min, x1max, y1max, x2min, y2min, x2max, y2max):
     if x1min > x2max or x1max < x2min:
@@ -27,6 +25,7 @@ def box_iou(x1min, y1min, x1max, y1max, x2min, y2min, x2max, y2max):
     area2 = (x2max - x2min) * (y2max - y2min)
     return (area_iou / (area1 + area2 - area_iou))
 
+print(box_iou(0,0,2,2,1,1,3,3) + "************************")
 class Detect(Function):
     """At test time, Detect is the final layer of SSD.  Decode location preds,
     apply non-maximum suppression to location predictions based on conf
@@ -64,7 +63,7 @@ class Detect(Function):
         conf_data = conf_data[0]
         loc_data = loc_data[0]
         all_boxes = torch.cat((decoded_boxes, conf_data), 1)
-        #all_boxes = all_boxes[:300, :]
+        all_boxes = all_boxes[:300, :]
         print(str(len(all_boxes)) + "***************")
         index = []
         #ka yi ge yu  zhi  lai  jia  su
@@ -83,14 +82,8 @@ class Detect(Function):
                         index[j] = index[j] - index[k]
             #do nms in specific class
             for j in range(len(index)):
-                if index[j] < 0:
-                    continue
                 for k in range(len(index)):
-                    if box_iou(all_boxes[index[j]][0], all_boxes[index[j]][1],
-                               all_boxes[index[j]][2], all_boxes[index[j]][3],
-                               all_boxes[index[k]][0], all_boxes[index[k]][1],
-                               all_boxes[index[k]][2], all_boxes[index[k]][3])  > 0.45:
-                        index[k] = -1
+                    j = j
         return all_boxes
 
         # Decode predictions into bboxes.

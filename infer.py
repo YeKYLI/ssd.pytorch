@@ -1,5 +1,3 @@
-#do the infer
-
 import torch
 import cv2
 from ssd import build_ssd
@@ -7,9 +5,6 @@ from ssd import build_ssd
 num_classes = 81
 image_path = "data/1.jpg"
 weights = "weights/ssd300_COCO_140000.pth"
-
-#cv2.imshow("fafda", image)
-#cv2.waitKey()
 
 #def infer()
 def get_features_hook(self, input, output):
