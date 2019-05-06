@@ -25,7 +25,8 @@ if __name__ == '__main__':
     image = cv2.resize(image, (300, 300))
     for i in range(len(output)):
         if output[i][5] > 0.3:
-          cv2.rectangle(image, (int(output[i][0] * 300), int(output[i][1] * 300)),\
+            print(str(i) + " " + str(output[i][5]) + " " + str(output[i][0]) + " " + str(output[i][1])) 
+            cv2.rectangle(image, (int(output[i][0] * 300), int(output[i][1] * 300)),\
              (int(output[i][2] * 300), int(output[i][3] * 300)), (255, 0, 0), 2)
     cv2.imshow(image_path, image)
     cv2.waitKey()

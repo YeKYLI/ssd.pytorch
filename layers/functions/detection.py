@@ -1,7 +1,9 @@
 import torch
+import numpy as np
 from torch.autograd import Function
 from ..box_utils import decode
 from data import voc as cfg
+from .quicksort import quicksort
 
 class Paper_box():
     def data(self, index, x, y, xmin, ymin, xmax, ymax, confidences):
@@ -14,9 +16,6 @@ class Paper_box():
         self.ymax = ymax
         self.confidences = confidences
 
-def quicksort():
-    i = 1
-   
 def box_iou(x1min, y1min, x1max, y1max, x2min, y2min, x2max, y2max):
     if x1min > x2max or x1max < x2min:
         return 0
@@ -75,23 +74,39 @@ class Detect(Function):
             index.clear()
             for j in range(len(all_boxes)):
                 index.append(j)
+            #bubble sort
+#            for j in range(len(all_boxes)):
+#                for k in range(len(all_boxes)):
+#                    if k > j and all_boxes[index[j]][i + 5] < all_boxes[index[k]][i + 5]:
+#                        index[j] = index[j] + index[k]
+#                        index[k] = index[j] - index[k]
+#                        index[j] = index[j] - index[k]
+            #quick sort
+            index_sort = []
             for j in range(len(all_boxes)):
-                for k in range(len(all_boxes)):
-                    if k > j and all_boxes[index[j]][i + 5] < all_boxes[index[k]][i + 5]:
-                        index[j] = index[j] + index[k]
-                        index[k] = index[j] - index[k]
-                        index[j] = index[j] - index[k]
+                index_sort.append([j, all_boxes[j][i + 5]])
+            index_sort = quicksort(index_sort, 0, len(index_sort) - 1)
+            index.clear()
+            #threshthod
+            for j in range(len(index_sort)):
+                if all_boxes[index_sort[j][0]][i + 5] > 0.2:
+                    index.append(index_sort[j][0])
             #do nms in specific class
             for j in range(len(index)):
                 if index[j] < 0:
                     continue
                 for k in range(len(index)):
-                    if box_iou(all_boxes[index[j]][0], all_boxes[index[j]][1],
-                               all_boxes[index[j]][2], all_boxes[index[j]][3],
-                               all_boxes[index[k]][0], all_boxes[index[k]][1],
-                               all_boxes[index[k]][2], all_boxes[index[k]][3])  > 0.45:
+                    if k > j and box_iou(all_boxes[index[j]][0], all_boxes[index[j]][1],
+                                 all_boxes[index[j]][2], all_boxes[index[j]][3],
+                                 all_boxes[index[k]][0], all_boxes[index[k]][1],
+                                 all_boxes[index[k]][2], all_boxes[index[k]][3])  > 0.45:
                         index[k] = -1
-        return all_boxes
+        process_boxes = []
+        for i in range(len(index)):
+            if index[i] >= 0:
+                process_boxes.append(all_boxes[index[i]].numpy().tolist())
+        process_boxes = torch.FloatTensor(process_boxes)
+        return process_boxes
 
         # Decode predictions into bboxes.
 #        for i in range(num):
