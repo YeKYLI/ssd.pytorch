@@ -5,7 +5,8 @@ from torch.autograd import Variable
 from layers import *
 from data import voc, coco
 import os
-
+import numpy as np
+from layers.functions.detection import block_nms
 
 class SSD(nn.Module):
     """Single Shot Multibox Architecture
@@ -87,21 +88,37 @@ class SSD(nn.Module):
             x = F.relu(v(x), inplace=True)
             if k % 2 == 1:
                 sources.append(x)
-
         # apply multibox head to source layers
+        #store the specific value in the paper_box
+        branch = 0
+        paper_box = list()
         for (x, l, c) in zip(sources, self.loc, self.conf):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
-
+            branch = branch + 1
+            print(str(branch) + "******************")
+            print(l(x).shape)
+            for i in range(int(l(x).shape[1] / 4)):
+                per_box = list()
+                for j in range(l(x).shape[2]):
+                    for k in range(l(x).shape[3]):
+                        #defalut is NCHW
+                        paper_box.append([branch, j, k, i])
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
+        
         if self.phase == "test":
+            output_block = block_nms(paper_box,
+                      loc.view(loc.size(0), -1, 4),
+                      self.softmax(conf.view(conf.size(0), -1,self.num_classes)),
+                        self.priors.type(type(x.data)), self.num_classes)
             output = self.detect(
                 loc.view(loc.size(0), -1, 4),                   # loc preds
                 self.softmax(conf.view(conf.size(0), -1,
                              self.num_classes)),                # conf preds
                 self.priors.type(type(x.data))                  # default boxes
             )
+            return output, output_block
         else:
             output = (
                 loc.view(loc.size(0), -1, 4),

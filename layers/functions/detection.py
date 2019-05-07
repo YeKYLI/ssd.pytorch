@@ -26,6 +26,43 @@ def box_iou(x1min, y1min, x1max, y1max, x2min, y2min, x2max, y2max):
     area2 = (x2max - x2min) * (y2max - y2min)
     return (area_iou / (area1 + area2 - area_iou))
 
+
+def block_nms(paper_box, loc, conf, prior_data, num_classes):
+    print("begin our new nms ..........")
+    variance = cfg['variance']
+    #we get the all predicted boxes and its confidence
+    decoded_boxes = decode(loc[0], prior_data, variance)
+    conf = conf[0]
+    loc = loc[0]
+    all_boxes = torch.cat((decoded_boxes, conf), 1)
+    indexes = list()
+    branch = paper_box[len(paper_box) - 1][0]
+    for i in range(branch):
+        index = list()
+        for j in range(len(paper_box)):
+            if(paper_box[j][0] == (i + 1)):
+                index.append(j)
+        indexes.append(index)
+    
+    #in the first, we just test the specific one class !!!
+    block_w = 2
+    block_h = 2
+    for i in range(num_classes):
+        if i != 1:
+            continue
+        for j in range(branch):
+            #do our featuremap nms
+            feature_w = paper_box[indexes[j][len(indexes[j]) - 1]][2] + 1
+            feature_h = paper_box[indexes[j][len(indexes[j]) - 1]][2] + 1
+            print(str(feature_w) + " " + str(feature_h))
+            for k in range(len(paper_box)):
+                k = k
+                #if paper_box[2] > 
+                #if pap_box_x >=  
+    
+    return all_boxes
+
+    
 class Detect(Function):
     """At test time, Detect is the final layer of SSD.  Decode location preds,
     apply non-maximum suppression to location predictions based on conf
@@ -44,6 +81,7 @@ class Detect(Function):
         self.variance = cfg['variance']
 
     def forward(self, loc_data, conf_data, prior_data):
+        print("test*****************")
         """
         Args:
             loc_data: (tensor) Loc preds from loc layers
@@ -66,7 +104,6 @@ class Detect(Function):
         #all_boxes = all_boxes[:300, :]
         print(str(len(all_boxes)) + "***************")
         index = []
-        #ka yi ge yu  zhi  lai  jia  su
         #we get the exact index
         for i in range(self.num_classes - 1):
             if i > 0:
