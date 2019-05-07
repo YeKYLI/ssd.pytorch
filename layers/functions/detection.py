@@ -47,16 +47,38 @@ def block_nms(paper_box, loc, conf, prior_data, num_classes):
     #in the first, we just test the specific one class !!!
     block_w = 2
     block_h = 2
+    #per class
     for i in range(num_classes):
         if i != 1:
             continue
+        #per branch featuremap
         for j in range(branch):
-            #do our featuremap nms
             feature_w = paper_box[indexes[j][len(indexes[j]) - 1]][2] + 1
-            feature_h = paper_box[indexes[j][len(indexes[j]) - 1]][2] + 1
-            print(str(feature_w) + " " + str(feature_h))
-            for k in range(len(paper_box)):
-                k = k
+            feature_h = paper_box[indexes[j][len(indexes[j]) - 1]][1] + 1
+            index = indexes[j]
+            print(len(index))
+            #per block
+            #sort per block
+            #next i will test the exact block carefully, and do our new nms, and merge both thing
+            for p in range(block_h):
+                for q in range(block_w):
+                    #这里要加一个限定条件,来判定当特征图比block的size小的时候，怎么做，这个我还没做
+                    #这里还是有个bug的，这部分一定要卡死，否则之后的结果没有意义
+                    block_index = list()
+                    w_low = int(feature_w / block_w) * q
+                    w_high = int(feature_w / block_w) * (q + 1)
+                    if q == (feature_w - 1):
+                        w_high = feature_w
+                    h_low = int(feature_h / block_h) * p
+                    h_high = int(feature_h / block_h) * (p + 1)
+                    if p == (block_h - 1):
+                        h_high = feature_h
+                    for r in range(len(index)):
+                        if (paper_box[index[r]][1] >= w_low and paper_box[index[r]][1] < w_high and 
+                            paper_box[index[r]][2] >= h_low and paper_box[index[r]][2] < h_high):
+                            block_index.append(index[r])
+                 
+                    print(len(block_index))
                 #if paper_box[2] > 
                 #if pap_box_x >=  
     
