@@ -91,6 +91,7 @@ class SSD(nn.Module):
         # apply multibox head to source layers
         #store the specific value in the paper_box
         branch = 0
+        idx = 0
         paper_box = list()
         for (x, l, c) in zip(sources, self.loc, self.conf):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
@@ -98,12 +99,12 @@ class SSD(nn.Module):
             branch = branch + 1
             print(str(branch) + "******************")
             print(l(x).shape)
-            for i in range(int(l(x).shape[1] / 4)):
-                per_box = list()
-                for j in range(l(x).shape[2]):
-                    for k in range(l(x).shape[3]):
+            for j in range(l(x).shape[2]):
+                for k in range(l(x).shape[3]):
+                    for i in range(int(l(x).shape[1] / 4)):
                         #defalut is NCHW
-                        paper_box.append([branch, j, k, i])
+                        paper_box.append([branch, j, k, idx])
+                        idx = idx + 1
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
         
@@ -118,6 +119,8 @@ class SSD(nn.Module):
                              self.num_classes)),                # conf preds
                 self.priors.type(type(x.data))                  # default boxes
             )
+            #compare the difference
+            
             return output, output_block
         else:
             output = (
