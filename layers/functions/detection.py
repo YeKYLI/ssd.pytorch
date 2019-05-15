@@ -15,16 +15,6 @@ def box_iou(x1min, y1min, x1max, y1max, x2min, y2min, x2max, y2max):
     area2 = (x2max - x2min) * (y2max - y2min)
     return (area_iou / (area1 + area2 - area_iou))
 
-#__index = []
-#def quick_sort(left, right):
-#    if left > right:
-#    
-#def quicksort(index, all_boxes, class_id, left, right):
-#    global __index
-#    __index.clear
-#    __index = index
-#    quick_sort(left, right)
-
 def atom_nms(block_index, all_boxes):
     for i in range(len(block_index)):
         if block_index[i] < 0:
@@ -34,6 +24,9 @@ def atom_nms(block_index, all_boxes):
                          all_boxes[block_index[i]][2], all_boxes[block_index[i]][3],
                          all_boxes[block_index[j]][0], all_boxes[block_index[j]][1],
                          all_boxes[block_index[j]][2], all_boxes[block_index[j]][3]) > 0.45:
+                #if block_index[j] == 2829:
+                #    print("attention !!!!!!!!!!!!!!!!!!!!!!!!!")
+                #    print(block_index[i])
                 block_index[j] = -1
     index = list()
     for i in range(len(block_index)):
@@ -42,7 +35,6 @@ def atom_nms(block_index, all_boxes):
     return index
 
 def block_nms(paper_box, loc, conf, prior_data, num_classes):
-    print("begin our new nms ..........")
     variance = cfg['variance']
     #we get the all predicted boxes and its confidence
     decoded_boxes = decode(loc[0], prior_data, variance)
@@ -57,7 +49,73 @@ def block_nms(paper_box, loc, conf, prior_data, num_classes):
             if(paper_box[j][0] == (i + 1)):
                 index.append(j)
         indexes.append(index)
-    
+
+    #in the specific feature map
+#    process_boxes = list()
+#    for i in range(num_classes):
+#        if i > 0:
+#            break
+#        branch_index = list()
+#        for j in range(branch):
+#            feature_w = paper_box[indexes[j][len(indexes[j]) - 1]][2] + 1
+#            feature_h = paper_box[indexes[j][len(indexes[j]) - 1]][1] + 1
+#            index = indexes[j]
+#            #threshthod
+#            temp_index = list()
+#            for k in range(len(index)):
+#                if all_boxes[index[k]][i + 5] > 0.1:
+#                    temp_index.append(index[k])
+#            #print(str(len(index)) + "********1")
+#            index = temp_index
+#            #print(str(len(index)) + "********2")
+#            #quick sort per feature map
+#            index_sort = []
+#            for k in range(len(index)):
+#                index_sort.append([index[k], all_boxes[index[k]][i + 5]])
+#            index_sort = quicksort(index_sort, 0, len(index_sort) - 1)
+#            for k in range(len(index_sort)):
+#                index[k] = index_sort[k][0]
+#                #print(str(index[k]) + " " + str(all_boxes[index[k]][i + 5]))
+#            #nms per feature map
+#            for p in range(len(index)):
+#                if index[p] < 0:
+#                    continue
+#                for q in range(len(index)):
+#                    if q > p and box_iou(all_boxes[index[p]][0], all_boxes[index[p]][1],
+#                                 all_boxes[index[p]][2], all_boxes[index[p]][3],
+#                                 all_boxes[index[q]][0], all_boxes[index[q]][1],
+#                                 all_boxes[index[q]][2], all_boxes[index[q]][3])  > 0.45:
+#                        index[q] = -1
+#            for k in range(len(index)):
+#                if index[k] >= 0:
+#                    branch_index.append(index[k])
+#        #quick sort in all branch
+#        index_sort = []
+#        index = branch_index
+#        for j in range(len(index)):
+#            index_sort.append([index[j], all_boxes[index[j]][i + 5]])
+#        index_sort = quicksort(index_sort, 0, len(index_sort) - 1)
+#        for j in range(len(index_sort)):
+#            index[j] = index_sort[j][0]
+#        #nms in all branch
+#        for j in range(len(index)):
+#            if index[j] < 0:
+#                continue
+#            for k in range(len(index)):
+#                if k > j and box_iou(all_boxes[index[j]][0], all_boxes[index[j]][1],
+#                                 all_boxes[index[j]][2], all_boxes[index[j]][3],
+#                                 all_boxes[index[k]][0], all_boxes[index[k]][1],
+#                                 all_boxes[index[k]][2], all_boxes[index[k]][3])  > 0.45:
+#                    index[k] = -1
+#        for j in range(len(index)):
+#            if index[j] >= 0:
+#                temp_box = all_boxes[index[j]].detach().numpy().tolist()
+#                temp_box.append(index[j])
+#                process_boxes.append(temp_box)
+#    return process_boxes
+
+            
+            
     #in the first, we just test the specific one class !!!
     block_w = 2
     block_h = 2
@@ -66,18 +124,19 @@ def block_nms(paper_box, loc, conf, prior_data, num_classes):
     for i in range(num_classes):
         if i != 1:
             continue
-        #per branch featuremap
         all_branch_index = list()
+        #per branch
         for j in range(branch):
+            if j != 0:
+                break
             feature_w = paper_box[indexes[j][len(indexes[j]) - 1]][2] + 1
             feature_h = paper_box[indexes[j][len(indexes[j]) - 1]][1] + 1
+            print("feature map size w = " + str(feature_w) + " h = " +  str(feature_h))
             index = indexes[j]
-            #print(len(index))
             #per block
-            print("feature size = ")
-            print(str(feature_w) + " " +  str(feature_h))
             for p in range(block_h):
                 for q in range(block_w):
+                    print("index " + str(p * block_w + q))
                     block_index = list()
                     w_low = int(feature_w / block_w) * q
                     w_high = int(feature_w / block_w) * (q + 1)
@@ -87,19 +146,11 @@ def block_nms(paper_box, loc, conf, prior_data, num_classes):
                     h_high = int(feature_h / block_h) * (p + 1)
                     if p == (block_h - 1):
                         h_high = feature_h
+                    #block and threshod
                     for r in range(len(index)):
                         if (paper_box[index[r]][2] >= w_low and paper_box[index[r]][2] < w_high and 
-                            paper_box[index[r]][1] >= h_low and paper_box[index[r]][1] < h_high):
+                            paper_box[index[r]][1] >= h_low and paper_box[index[r]][1] < h_high and all_boxes[index[r]][i + 4] > 0.2):
                             block_index.append(index[r])
-                            
-                    #confidence thresh
-                    #print(str(len(block_index)) + "1********")
-                    index_conf = list()
-                    for r in range(len(block_index)):
-                        if all_boxes[block_index[r]][i + 4] > 0.1:
-                            index_conf.append(block_index[r])
-                    block_index = index_conf
-                    #print(str(len(block_index)) + "2*******")
                     #sort per block
                     index_sort = []
                     for r in range(len(block_index)):
@@ -107,42 +158,26 @@ def block_nms(paper_box, loc, conf, prior_data, num_classes):
                     index_sort = quicksort(index_sort, 0, len(index_sort) - 1)
                     for r in range(len(block_index)):
                         block_index[r] = index_sort[r][0]
-                    #print(str(block_index) + "3********")
-                    #test per block
-                    #发现在这里进行实验就行了，我在这里写的很好
-                    for x in range(len(block_index)):
-                       x = x # print(str(block_index[x]) + " " + str(all_boxes[block_index[x]][i + 4]))
-                    #nms per block,
+                        print("new " + str(block_index[r]) + " " + str(all_boxes[block_index[r]][i + 4]))
+                    #nms per block
                     block_index = atom_nms(block_index, all_boxes)
                     for x in range(len(block_index)):
-                       x = x # print(str(block_index[x]) + " " + str(all_boxes[block_index[x]][i + 4]))
-                    for x in range(len(block_index)):
                         all_branch_index.append(block_index[x])
-                    for x in range(len(block_index)):
-                        print(str(block_index[x]) + " " + str(all_boxes[block_index[x]][i + 4]))
-                    #print(str(all_branch_index) + "************")
-                    #print(len(all_branch_index))
-                    #print(str(len(block_index)) + "*********")
-                    #print(block_index)
-        #print(str(len(block_index)) + "666")
-                    #sort per block
+        #sort and nms in all feature map
         index_sort = []
         for x in range(len(all_branch_index)):
             index_sort.append([all_branch_index[x], all_boxes[all_branch_index[x]][i + 4]])
         index_sort = quicksort(index_sort, 0, len(index_sort) - 1)
         for x in range(len(all_branch_index)):
             all_branch_index[x] = index_sort[x][0]
-        print(str(len(all_branch_index)) + "*************")
         final_index = atom_nms(all_branch_index, all_boxes)
-        print(str(len(final_index)) + "*************")
         per_boxes = list()
         for x in range(len(final_index)):
-            print(str(final_index[x]) + " " + str(all_boxes[final_index[x]][i + 4]) + "**********************")
             temp_box = all_boxes[final_index[x]].detach().numpy().tolist()
+            print("new" + str(x) + " " + str(final_index[x]) + " " + str(all_boxes[final_index[x]][i + 4]))
             temp_box.append(final_index[x])
             per_boxes.append(temp_box)
-            #per_boxes.append(all_boxes[final_index[x]].detach().numpy().tolist().append(final_index[x]))
-        return torch.FloatTensor(per_boxes) 
+        return per_boxes 
 
     
 class Detect(Function):
@@ -163,7 +198,6 @@ class Detect(Function):
         self.variance = cfg['variance']
 
     def forward(self, loc_data, conf_data, prior_data):
-        #print("test*****************")
         """
         Args:
             loc_data: (tensor) Loc preds from loc layers
@@ -183,33 +217,24 @@ class Detect(Function):
         conf_data = conf_data[0]
         loc_data = loc_data[0]
         all_boxes = torch.cat((decoded_boxes, conf_data), 1)
-        #all_boxes = all_boxes[:300, :]
-        print(str(len(all_boxes)) + "***************")
-        index = []
+        all_index = []
+        process_boxes = []
         #we get the exact index
         for i in range(self.num_classes - 1):
             if i > 0:
                 break
-            index.clear()
+            #threshthod
+            index = list()
             for j in range(len(all_boxes)):
-                index.append(j)
-            #bubble sort
-#            for j in range(len(all_boxes)):
-#                for k in range(len(all_boxes)):
-#                    if k > j and all_boxes[index[j]][i + 5] < all_boxes[index[k]][i + 5]:
-#                        index[j] = index[j] + index[k]
-#                        index[k] = index[j] - index[k]
-#                        index[j] = index[j] - index[k]
+                if all_boxes[j][i + 5] > 0.2 and j < 5777: #attention !!!
+                    index.append(j)
             #quick sort
             index_sort = []
-            for j in range(len(all_boxes)):
-                index_sort.append([j, all_boxes[j][i + 5]])
+            for j in range(len(index)):
+                index_sort.append([index[j], all_boxes[index[j]][i + 5]])
             index_sort = quicksort(index_sort, 0, len(index_sort) - 1)
-            index.clear()
-            #threshthod
             for j in range(len(index_sort)):
-                if all_boxes[index_sort[j][0]][i + 5] > 0.1:
-                    index.append(index_sort[j][0])
+                index[j] = index_sort[j][0]
             #do nms in specific class
             for j in range(len(index)):
                 if index[j] < 0:
@@ -220,37 +245,20 @@ class Detect(Function):
                                  all_boxes[index[k]][0], all_boxes[index[k]][1],
                                  all_boxes[index[k]][2], all_boxes[index[k]][3])  > 0.45:
                         index[k] = -1
-        process_boxes = []
-        for i in range(len(index)):
-            if index[i] >= 0:
-                temp_box = all_boxes[index[i]].numpy().tolist()
-                temp_box.append(index[i])
-                process_boxes.append(temp_box)
-                #process_boxes.append(all_boxes[index[i]].numpy().tolist().append(index[i]))
+            count = 0
+            #attention !!!!!!!!!!!!!!!
+            #index.clear()
+            #index.append(2673)
+            #index.append(2829)
+            #index.append(2981)
+            for j in range(len(index)):
+                if index[j] >= 0:
+                    temp_box = all_boxes[index[j]].numpy().tolist()
+                    temp_box.append(index[j])
+                    process_boxes.append(temp_box)
+                    print("old" + str(count) +  " " + str(index[j]) + " " + str(all_boxes[index[j]][i + 5]))
+                    count = count + 1
         process_boxes = torch.FloatTensor(process_boxes)
         return process_boxes
 
-        # Decode predictions into bboxes.
-#        for i in range(num):
-#            decoded_boxes = decode(loc_data[i], prior_data, self.variance)
-#            # For each class, perform nms
-#            conf_scores = conf_preds[i].clone()
-#
-#            for cl in range(1, self.num_classes):
-#                c_mask = conf_scores[cl].gt(self.conf_thresh)
-#                scores = conf_scores[cl][c_mask]
-#                if scores.size(0) == 0:
-#                    continue
-#                l_mask = c_mask.unsqueeze(1).expand_as(decoded_boxes)
-#                boxes = decoded_boxes[l_mask].view(-1, 4)
-#                # idx of highest scoring and non-overlapping boxes per class
-#                ids, count = nms(boxes, scores, self.nms_thresh, self.top_k)
-#                output[i, cl, :count] = \
-#                    torch.cat((scores[ids[:count]].unsqueeze(1),
-#                               boxes[ids[:count]]), 1)
-#        flt = output.contiguous().view(num, -1, 5)
-#        _, idx = flt[:, :, 0].sort(1, descending=True)
-#        _, rank = idx.sort(1)
-#        flt[(rank < self.top_k).unsqueeze(-1).expand_as(flt)].fill_(0)
-#        return output
 

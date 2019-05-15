@@ -97,8 +97,8 @@ class SSD(nn.Module):
             loc.append(l(x).permute(0, 2, 3, 1).contiguous())
             conf.append(c(x).permute(0, 2, 3, 1).contiguous())
             branch = branch + 1
-            print(str(branch) + "******************")
-            print(l(x).shape)
+            #print(str(branch) + "******************")
+            #print(l(x).shape)
             for j in range(l(x).shape[2]):
                 for k in range(l(x).shape[3]):
                     for i in range(int(l(x).shape[1] / 4)):
