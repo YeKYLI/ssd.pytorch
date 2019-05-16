@@ -24,8 +24,8 @@ def atom_nms(block_index, all_boxes):
                          all_boxes[block_index[i]][2], all_boxes[block_index[i]][3],
                          all_boxes[block_index[j]][0], all_boxes[block_index[j]][1],
                          all_boxes[block_index[j]][2], all_boxes[block_index[j]][3]) > 0.45:
-                #if block_index[j] == 2829:
-                #    print("attention !!!!!!!!!!!!!!!!!!!!!!!!!")
+                #if block_index[j] == 2045:
+                #    print("attention !!!!!!!new")
                 #    print(block_index[i])
                 block_index[j] = -1
     index = list()
@@ -149,7 +149,7 @@ def block_nms(paper_box, loc, conf, prior_data, num_classes):
                     #block and threshod
                     for r in range(len(index)):
                         if (paper_box[index[r]][2] >= w_low and paper_box[index[r]][2] < w_high and 
-                            paper_box[index[r]][1] >= h_low and paper_box[index[r]][1] < h_high and all_boxes[index[r]][i + 4] > 0.2):
+                            paper_box[index[r]][1] >= h_low and paper_box[index[r]][1] < h_high and all_boxes[index[r]][i + 4] > 0.1):
                             block_index.append(index[r])
                     #sort per block
                     index_sort = []
@@ -226,7 +226,7 @@ class Detect(Function):
             #threshthod
             index = list()
             for j in range(len(all_boxes)):
-                if all_boxes[j][i + 5] > 0.2 and j < 5777: #attention !!!
+                if all_boxes[j][i + 5] > 0.1 and j < 5777: #attention !!!
                     index.append(j)
             #quick sort
             index_sort = []
@@ -244,13 +244,17 @@ class Detect(Function):
                                  all_boxes[index[j]][2], all_boxes[index[j]][3],
                                  all_boxes[index[k]][0], all_boxes[index[k]][1],
                                  all_boxes[index[k]][2], all_boxes[index[k]][3])  > 0.45:
+                        #if index[k] == 2055:
+                        #    print(index[j])
+                        #    print("attention !!! old")
                         index[k] = -1
             count = 0
             #attention !!!!!!!!!!!!!!!
             #index.clear()
-            #index.append(2673)
-            #index.append(2829)
-            #index.append(2981)
+            #index.append(2045)
+            #index.append(2051)
+            #index.append(2055)
+            #index.append(2201)
             for j in range(len(index)):
                 if index[j] >= 0:
                     temp_box = all_boxes[index[j]].numpy().tolist()
